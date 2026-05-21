@@ -5,6 +5,13 @@ const ctx = canvas.getContext("2d");
 const listenBtn = document.querySelector("#listenBtn");
 const simulateBtn = document.querySelector("#simulateBtn");
 const portfolioBtn = document.querySelector("#portfolioBtn");
+const geminiBtn = document.querySelector("#geminiBtn");
+const newsBtn = document.querySelector("#newsBtn");
+const launchLastBtn = document.querySelector("#launchLastBtn");
+const apiModal = document.querySelector("#apiModal");
+const geminiKeyInput = document.querySelector("#geminiKeyInput");
+const saveGeminiKeyBtn = document.querySelector("#saveGeminiKeyBtn");
+const skipGeminiKeyBtn = document.querySelector("#skipGeminiKeyBtn");
 const terminal = document.querySelector("#terminal");
 const transcript = document.querySelector("#transcript");
 const wakeState = document.querySelector("#wakeState");
@@ -32,6 +39,9 @@ let pulse = 0;
 
 const USER_NAME = "Ravi";
 const PORTFOLIO_URL = "https://profileravi.netlify.app/";
+const API_BASE_URL = "http://127.0.0.1:8000";
+const GEMINI_KEY_STORAGE = "jarvis_gemini_api_key";
+let lastResolvedUrl = PORTFOLIO_URL;
 
 const terminalLines = [
   ["Booting holographic kernel", "ok"],
@@ -39,7 +49,7 @@ const terminalLines = [
   ["Neural matrix handshake ready", "ok"],
   ["Encrypted uplink cloaked", "warn"],
   ["Awaiting phrase: HEY JARVIS", "ok"],
-  ["Command pack loaded: portfolio, diagnostics, scan, time, standby", "ok"]
+  ["Command pack loaded: portfolio, diagnostics, scan, news, gemini, standby", "ok"]
 ];
 
 const hackerFeed = [
@@ -173,6 +183,48 @@ function setAwake(isAwake, reason = "Wake phrase detected") {
   logLine(reason, awake ? "ok" : "warn");
 }
 
+function openApiModal() {
+  apiModal.classList.add("is-open");
+  geminiKeyInput.value = localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+  window.setTimeout(() => geminiKeyInput.focus(), 80);
+}
+
+function closeApiModal() {
+  apiModal.classList.remove("is-open");
+}
+
+function saveGeminiKey() {
+  const key = geminiKeyInput.value.trim();
+
+  if (!key) {
+    logLine("Gemini key not saved: empty input", "warn");
+    return;
+  }
+
+  localStorage.setItem(GEMINI_KEY_STORAGE, key);
+  closeApiModal();
+  logLine("Gemini key secured in browser storage");
+  speak("Gemini neural channel connected.");
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.detail || data.error || "Backend request failed");
+  }
+
+  return data;
+}
+
 function getFormalGreeting() {
   const hour = new Date().getHours();
   const dayPart = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
@@ -201,16 +253,58 @@ function runGreetingProtocol() {
 function openPortfolio() {
   logLine(`opening portfolio: ${PORTFOLIO_URL}`);
   confidenceText.textContent = "Portfolio channel";
-  const opened = window.open(PORTFOLIO_URL, "_blank");
+  openUrl(PORTFOLIO_URL, "Opening your portfolio now.");
+}
 
+function openUrl(url, spokenText = "Opening website now.") {
+  lastResolvedUrl = url;
+  const opened = window.open(url, "_blank");
   if (!opened) {
-    logLine("browser blocked the new tab. use the Open Portfolio button.", "warn");
-    speak("The browser blocked the portfolio tab. Please use the Open Portfolio button.");
+    logLine("browser blocked the new tab. press Launch Last Site to continue.", "warn");
+    speak("The browser blocked the new tab. Press Launch Last Site to continue.");
     return;
   }
 
   opened.opener = null;
-  speak("Opening your portfolio now.");
+  speak(spokenText);
+}
+
+function extractOpenTarget(normalized) {
+  return normalized
+    .replace(/^.*?\b(open|launch|go to|visit)\b/, "")
+    .replace(/\b(website|web site|site|url|please|jarvis)\b/g, "")
+    .trim();
+}
+
+async function openWebsiteBySearch(commandText) {
+  const target = extractOpenTarget(commandText);
+
+  if (!target) {
+    speak("Which website should I open?");
+    logLine("website command missing target", "warn");
+    return;
+  }
+
+  if (target.includes("portfolio") || target.includes("ravi")) {
+    openPortfolio();
+    return;
+  }
+
+  confidenceText.textContent = "Resolving site";
+  logLine(`searching web target: ${target}`);
+
+  try {
+    const result = await apiRequest("/api/resolve-site", {
+      method: "POST",
+      body: JSON.stringify({ query: target })
+    });
+
+    logLine(`resolved ${result.title || target}: ${result.url}`);
+    openUrl(result.url, `Opening ${result.title || target}.`);
+  } catch (error) {
+    logLine(`site resolution failed: ${error.message}`, "danger");
+    speak("I could not resolve that website from the backend.");
+  }
 }
 
 function speakStatusReport() {
@@ -249,7 +343,80 @@ function clearTerminal() {
   speak("Command stream cleared.");
 }
 
-function handleSpeech(text) {
+async function searchNews(commandText = "latest technology news") {
+  const query = commandText
+    .replace(/\b(latest|news|search|about|for|jarvis|show|get|me|the)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim() || "technology";
+
+  confidenceText.textContent = "News uplink";
+  logLine(`requesting real-time news: ${query}`);
+
+  try {
+    const result = await apiRequest(`/api/news?q=${encodeURIComponent(query)}`);
+    const headlines = result.items.slice(0, 3);
+
+    if (!headlines.length) {
+      logLine("news uplink returned no headlines", "warn");
+      speak("I could not find live headlines for that topic.");
+      return;
+    }
+
+    headlines.forEach((item, index) => {
+      logLine(`news ${index + 1}: ${item.title}`);
+    });
+
+    const summary = headlines.map((item, index) => `Headline ${index + 1}: ${item.title}`).join(". ");
+    transcript.textContent = summary;
+    speak(summary);
+  } catch (error) {
+    logLine(`news search failed: ${error.message}`, "danger");
+    speak("The real-time news uplink is offline. Start the Python backend and try again.");
+  }
+}
+
+async function askGemini(prompt) {
+  const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+
+  if (!apiKey) {
+    openApiModal();
+    logLine("Gemini key required for AI generation", "warn");
+    speak("Please paste your Gemini API key first.");
+    return;
+  }
+
+  const cleanPrompt = prompt
+    .replace(/\b(ask gemini|gemini|jarvis|answer|tell me)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleanPrompt) {
+    speak("What should I ask Gemini?");
+    return;
+  }
+
+  confidenceText.textContent = "Gemini thinking";
+  logLine(`Gemini request: ${cleanPrompt}`);
+
+  try {
+    const result = await apiRequest("/api/gemini/generate", {
+      method: "POST",
+      headers: {
+        "X-Gemini-API-Key": apiKey
+      },
+      body: JSON.stringify({ prompt: cleanPrompt })
+    });
+
+    transcript.textContent = result.text;
+    logLine(`Gemini: ${result.text.slice(0, 140)}${result.text.length > 140 ? "..." : ""}`);
+    speak(result.text.slice(0, 240));
+  } catch (error) {
+    logLine(`Gemini request failed: ${error.message}`, "danger");
+    speak("Gemini did not respond. Please check your API key and backend server.");
+  }
+}
+
+async function handleSpeech(text) {
   const normalized = text.toLowerCase();
   transcript.textContent = text;
 
@@ -264,8 +431,14 @@ function handleSpeech(text) {
     return;
   }
 
-  if (normalized.includes("portfolio") || normalized.includes("website") || normalized.includes("web site")) {
+  if (normalized.includes("portfolio")) {
     openPortfolio();
+  } else if (normalized.includes("open") || normalized.includes("launch") || normalized.includes("go to") || normalized.includes("visit")) {
+    await openWebsiteBySearch(normalized);
+  } else if (normalized.includes("news") || normalized.includes("headline")) {
+    await searchNews(normalized);
+  } else if (normalized.includes("gemini") || normalized.includes("answer") || normalized.includes("tell me")) {
+    await askGemini(normalized);
   } else if (normalized.includes("status") || normalized.includes("diagnostic") || normalized.includes("report")) {
     speakStatusReport();
   } else if (normalized.includes("hack") || normalized.includes("scan")) {
@@ -281,7 +454,7 @@ function handleSpeech(text) {
     speak("Entering standby.");
   } else {
     logLine(`command parsed: ${text}`);
-    speak("Command acknowledged.");
+    await askGemini(normalized);
   }
 }
 
@@ -317,7 +490,7 @@ function setupRecognition() {
     }
 
     if (finalText) {
-      handleSpeech(finalText);
+      void handleSpeech(finalText);
     }
   };
 
@@ -418,6 +591,23 @@ simulateBtn.addEventListener("click", () => {
   runGreetingProtocol();
 });
 portfolioBtn.addEventListener("click", openPortfolio);
+geminiBtn.addEventListener("click", openApiModal);
+newsBtn.addEventListener("click", () => {
+  void searchNews("latest technology news");
+});
+launchLastBtn.addEventListener("click", () => {
+  openUrl(lastResolvedUrl, "Launching the resolved site.");
+});
+saveGeminiKeyBtn.addEventListener("click", saveGeminiKey);
+skipGeminiKeyBtn.addEventListener("click", () => {
+  closeApiModal();
+  logLine("Gemini channel skipped. Local commands remain active.", "warn");
+});
+geminiKeyInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    saveGeminiKey();
+  }
+});
 
 window.addEventListener("resize", resizeCanvas);
 
@@ -426,5 +616,8 @@ resizeCanvas();
 drawCore();
 bootTerminal();
 tickClock();
+if (!localStorage.getItem(GEMINI_KEY_STORAGE)) {
+  window.setTimeout(openApiModal, 650);
+}
 window.setInterval(tickClock, 1000);
 window.setInterval(streamHackingLines, 1800);
