@@ -39,7 +39,7 @@ let pulse = 0;
 
 const USER_NAME = "Ravi";
 const PORTFOLIO_URL = "https://profileravi.netlify.app/";
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL = "https://jarvis-2-18mf.onrender.com";
 const GEMINI_KEY_STORAGE = "jarvis_gemini_api_key";
 let lastResolvedUrl = PORTFOLIO_URL;
 
