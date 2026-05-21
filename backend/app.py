@@ -24,7 +24,7 @@ ALLOWED_ORIGINS = [
     ).split(",")
     if origin.strip()
 ]
-NEWS_REGION = os.getenv("NEWS_REGION", "in:en")
+NEWS_REGION = os.getenv("NEWS_REGION", "US:en")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "10"))
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
