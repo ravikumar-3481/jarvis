@@ -400,8 +400,25 @@ body.awake .status-pill span {
   font-size: 1.18rem;
 }
 
+.command-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.command-list span {
+  padding: 6px 9px;
+  border: 1px solid rgba(55, 231, 255, 0.2);
+  background: rgba(55, 231, 255, 0.07);
+  color: var(--muted);
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
 .terminal {
-  height: 330px;
+  height: 270px;
   margin-top: 18px;
   padding: 14px;
   overflow: hidden;
@@ -427,7 +444,7 @@ body.awake .status-pill span {
 
 .controls {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 18px;
 }

@@ -104,18 +104,28 @@
           <p id="transcript">Microphone is idle. Press Initiate Listening and say "Hey Jarvis".</p>
         </div>
 
+        <div class="command-list" aria-label="Available voice commands">
+          <span>open portfolio</span>
+          <span>status report</span>
+          <span>run scan</span>
+          <span>what time</span>
+          <span>introduce yourself</span>
+          <span>standby</span>
+        </div>
+
         <div class="terminal" id="terminal" aria-live="polite"></div>
 
         <div class="controls">
           <button id="listenBtn" type="button">Initiate Listening</button>
           <button id="simulateBtn" type="button">Simulate Wake</button>
+          <button id="portfolioBtn" type="button">Open Portfolio</button>
         </div>
       </aside>
     </section>
 
     <footer class="footer-strip">
       <span>Voice trigger: hey jarvis</span>
-      <span>Audio particles sync after microphone access</span>
+      <span>Try: open portfolio, status report, run scan</span>
       <span>Browser support: Chrome / Edge recommended</span>
     </footer>
   </main>

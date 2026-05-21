@@ -4,6 +4,7 @@ const canvas = document.querySelector("#particleCore");
 const ctx = canvas.getContext("2d");
 const listenBtn = document.querySelector("#listenBtn");
 const simulateBtn = document.querySelector("#simulateBtn");
+const portfolioBtn = document.querySelector("#portfolioBtn");
 const terminal = document.querySelector("#terminal");
 const transcript = document.querySelector("#transcript");
 const wakeState = document.querySelector("#wakeState");
@@ -29,12 +30,16 @@ let micLevel = 0;
 let particles = [];
 let pulse = 0;
 
+const USER_NAME = "Ravi";
+const PORTFOLIO_URL = "https://profileravi.netlify.app/";
+
 const terminalLines = [
   ["Booting holographic kernel", "ok"],
   ["Scanning local voice bus", "ok"],
   ["Neural matrix handshake ready", "ok"],
   ["Encrypted uplink cloaked", "warn"],
-  ["Awaiting phrase: HEY JARVIS", "ok"]
+  ["Awaiting phrase: HEY JARVIS", "ok"],
+  ["Command pack loaded: portfolio, diagnostics, scan, time, standby", "ok"]
 ];
 
 const hackerFeed = [
@@ -168,13 +173,89 @@ function setAwake(isAwake, reason = "Wake phrase detected") {
   logLine(reason, awake ? "ok" : "warn");
 }
 
+function getFormalGreeting() {
+  const hour = new Date().getHours();
+  const dayPart = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+  return `Good ${dayPart}, ${USER_NAME}. JARVIS interface online. Voice authentication accepted. Reactor core stable, network link protected, and all primary systems are ready for your command.`;
+}
+
+function runGreetingProtocol() {
+  const greetingSteps = [
+    ["voiceprint matched: Ravi", "ok"],
+    ["formal greeting protocol active", "ok"],
+    ["checking reactor output", "ok"],
+    ["verifying portfolio launch channel", "ok"],
+    ["all command modules standing by", "ok"]
+  ];
+
+  greetingSteps.forEach(([text, type], index) => {
+    window.setTimeout(() => logLine(text, type), index * 330);
+  });
+
+  const greeting = getFormalGreeting();
+  confidenceText.textContent = "Good to see you, sir";
+  transcript.textContent = greeting;
+  speak(greeting);
+}
+
+function openPortfolio() {
+  logLine(`opening portfolio: ${PORTFOLIO_URL}`);
+  confidenceText.textContent = "Portfolio channel";
+  const opened = window.open(PORTFOLIO_URL, "_blank");
+
+  if (!opened) {
+    logLine("browser blocked the new tab. use the Open Portfolio button.", "warn");
+    speak("The browser blocked the portfolio tab. Please use the Open Portfolio button.");
+    return;
+  }
+
+  opened.opener = null;
+  speak("Opening your portfolio now.");
+}
+
+function speakStatusReport() {
+  const report = "Status report. Reactor core is stable. Neural uplink is encrypted. Voice matrix is active. Threat level remains low.";
+  logLine("status report delivered: reactor stable, uplink encrypted, threat low");
+  confidenceText.textContent = "Systems nominal";
+  speak(report);
+}
+
+function runDefensiveScan() {
+  threatText.textContent = "Elevated";
+  modeText.textContent = "Defense Scan";
+  confidenceText.textContent = "Scanning";
+  logLine("defensive scan initialized", "danger");
+  logLine("checking exposed endpoints", "warn");
+  logLine("masking local telemetry", "ok");
+  speak("Running a defensive scan. I will notify you if anything looks suspicious.");
+}
+
+function speakTime() {
+  const now = new Date();
+  const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const date = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+  logLine(`time request answered: ${date}, ${time}`);
+  speak(`It is ${time} on ${date}.`);
+}
+
+function introduceJarvis() {
+  logLine("identity module requested");
+  speak("I am JARVIS, your voice activated interface for system status, portfolio launch, diagnostics, and tactical visual feedback.");
+}
+
+function clearTerminal() {
+  terminal.innerHTML = "";
+  logLine("command stream cleared");
+  speak("Command stream cleared.");
+}
+
 function handleSpeech(text) {
   const normalized = text.toLowerCase();
   transcript.textContent = text;
 
   if (normalized.includes("hey jarvis") || normalized.includes("hi jarvis")) {
     setAwake(true, "Wake phrase accepted. Interface online.");
-    speak("At your service.");
+    runGreetingProtocol();
     return;
   }
 
@@ -183,13 +264,18 @@ function handleSpeech(text) {
     return;
   }
 
-  if (normalized.includes("status")) {
-    logLine("status request received: reactor stable, uplink encrypted, threat low");
-    speak("All systems are stable.");
+  if (normalized.includes("portfolio") || normalized.includes("website") || normalized.includes("web site")) {
+    openPortfolio();
+  } else if (normalized.includes("status") || normalized.includes("diagnostic") || normalized.includes("report")) {
+    speakStatusReport();
   } else if (normalized.includes("hack") || normalized.includes("scan")) {
-    threatText.textContent = "Elevated";
-    logLine("intrusion simulation started", "danger");
-    speak("Running a defensive scan.");
+    runDefensiveScan();
+  } else if (normalized.includes("time") || normalized.includes("date")) {
+    speakTime();
+  } else if (normalized.includes("introduce") || normalized.includes("who are you")) {
+    introduceJarvis();
+  } else if (normalized.includes("clear")) {
+    clearTerminal();
   } else if (normalized.includes("sleep") || normalized.includes("standby")) {
     setAwake(false, "Standby command accepted.");
     speak("Entering standby.");
@@ -329,8 +415,9 @@ listenBtn.addEventListener("click", startListening);
 simulateBtn.addEventListener("click", () => {
   transcript.textContent = "Hey Jarvis";
   setAwake(true, "Wake phrase simulated. Interface online.");
-  speak("At your service.");
+  runGreetingProtocol();
 });
+portfolioBtn.addEventListener("click", openPortfolio);
 
 window.addEventListener("resize", resizeCanvas);
 
