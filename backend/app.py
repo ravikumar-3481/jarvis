@@ -20,11 +20,11 @@ ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
         "ALLOWED_ORIGINS",
-        "http://127.0.0.1:5500,http://localhost:5500,null",
+        "https://jarvisss.vercel.app/,null",
     ).split(",")
     if origin.strip()
 ]
-NEWS_REGION = os.getenv("NEWS_REGION", "US:en")
+NEWS_REGION = os.getenv("NEWS_REGION", "in:en")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "10"))
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
