@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS Interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="hud-grid" aria-hidden="true"></div>
+  <div class="scanline" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Stark Adaptive Response Matrix</p>
+        <h1>J.A.R.V.I.S</h1>
+      </div>
+      <div class="status-pill" id="wakeState">
+        <span></span>
+        Awaiting wake phrase
+      </div>
+    </header>
+
+    <section class="dashboard" aria-label="Jarvis command interface">
+      <aside class="panel system-panel">
+        <div class="panel-head">
+          <h2>System Status</h2>
+          <span id="clock">00:00:00</span>
+        </div>
+
+        <div class="metric">
+          <div class="metric-row">
+            <span>Reactor Core</span>
+            <strong id="reactorValue">68%</strong>
+          </div>
+          <div class="bar"><span style="--level: 68%"></span></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-row">
+            <span>Neural Uplink</span>
+            <strong id="uplinkValue">41%</strong>
+          </div>
+          <div class="bar"><span style="--level: 41%"></span></div>
+        </div>
+
+        <div class="metric">
+          <div class="metric-row">
+            <span>Voice Matrix</span>
+            <strong id="voiceValue">0%</strong>
+          </div>
+          <div class="bar voice-meter"><span id="voiceBar" style="--level: 0%"></span></div>
+        </div>
+
+        <div class="micro-stats">
+          <div>
+            <span>Mode</span>
+            <strong id="modeText">Passive Scan</strong>
+          </div>
+          <div>
+            <span>Protocol</span>
+            <strong>Mark VII</strong>
+          </div>
+          <div>
+            <span>Network</span>
+            <strong id="networkText">Cloaked</strong>
+          </div>
+          <div>
+            <span>Threat</span>
+            <strong id="threatText">Low</strong>
+          </div>
+        </div>
+      </aside>
+
+      <section class="core-stage">
+        <div class="orbit orbit-one" aria-hidden="true"></div>
+        <div class="orbit orbit-two" aria-hidden="true"></div>
+        <div class="orbit orbit-three" aria-hidden="true"></div>
+        <div class="reticle" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <canvas id="particleCore" width="720" height="720" aria-label="Voice synced particle reactor"></canvas>
+        <div class="core-copy">
+          <span id="coreState">Standby</span>
+          <strong id="confidenceText">Say "Hey Jarvis"</strong>
+        </div>
+      </section>
+
+      <aside class="panel terminal-panel">
+        <div class="panel-head">
+          <h2>Command Stream</h2>
+          <span id="signalText">Signal idle</span>
+        </div>
+
+        <div class="transcript-box">
+          <p id="transcript">Microphone is idle. Press Initiate Listening and say "Hey Jarvis".</p>
+        </div>
+
+        <div class="terminal" id="terminal" aria-live="polite"></div>
+
+        <div class="controls">
+          <button id="listenBtn" type="button">Initiate Listening</button>
+          <button id="simulateBtn" type="button">Simulate Wake</button>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="footer-strip">
+      <span>Voice trigger: hey jarvis</span>
+      <span>Audio particles sync after microphone access</span>
+      <span>Browser support: Chrome / Edge recommended</span>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
