@@ -13,17 +13,15 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+try:
+    from config import build_allowed_origins
+except ModuleNotFoundError:
+    from .config import build_allowed_origins
+
 load_dotenv()
 
 APP_NAME = os.getenv("APP_NAME", "Jarvis Backend")
-ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.getenv(
-        "ALLOWED_ORIGINS",
-        "https://jarvisss.vercel.app/,null",
-    ).split(",")
-    if origin.strip()
-]
+ALLOWED_ORIGINS = build_allowed_origins()
 NEWS_REGION = os.getenv("NEWS_REGION", "US:en")
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "10"))
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
